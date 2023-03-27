@@ -7,18 +7,18 @@ const User = require("../models/userModel");
 // @route          /api/users
 // @access         public
 const registerUser = asyncHandler(async (req, res) => {
-    const {name, email, password} = req.body;
+    const { name, email, password } = req.body;
 
     // Validation
-    if(!name || !email || !password) {
-      res.status(400);
-      throw new Error("Please include all fields!");
+    if (!name || !email || !password) {
+        res.status(400);
+        throw new Error("Please include all fields!");
     }
 
     // Find if user already exists
-    const userExists = await User.findOne({email});
+    const userExists = await User.findOne({ email });
 
-    if(userExists) {
+    if (userExists) {
         res.status(400);
         throw new Error("User already exists")
     }
@@ -29,12 +29,12 @@ const registerUser = asyncHandler(async (req, res) => {
 
     // Create user
     const user = await User.create({
-        name, 
+        name,
         email,
         password: hashedPassword
     });
 
-    if(user) {
+    if (user) {
         res.status(201).json({
             _id: user._id,
             name: user.name,
@@ -42,7 +42,7 @@ const registerUser = asyncHandler(async (req, res) => {
         })
     } else {
         res.status(400);
-        throw new error("Invalid user data")
+        throw new Error("Invalid user data")
     }
 });
 
@@ -51,7 +51,21 @@ const registerUser = asyncHandler(async (req, res) => {
 // @route          /api/users/login
 // @access         public
 const loginUser = asyncHandler(async (req, res) => {
-    res.send("Login Route");
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email });
+
+    // Check user and passwords match
+    if (user && (await bcrypt.compare(password, user.password))) {
+        res.status(200).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email
+        })
+    } else {
+        res.status(401);
+        throw new Error("Invalid credentials");
+    }
 });
 
 
